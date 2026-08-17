@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DAILY FIVE — a word a day</title>
+  <title>DAILY FIVE</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header>
-    <div class="eyebrow">No. <span id="puzzleNum">—</span> · a fresh word every day</div>
+    <div class="eyebrow">Word Puzzle Game</div>
     <h1>DAILY FIVE</h1>
     <div class="sub">Guess the five-letter word in six tries.<br>Green means right spot, gold means wrong spot.</div>
   </header>
@@ -21,7 +21,10 @@
   <div id="result">
     <h2 id="resultTitle"></h2>
     <div id="shareGrid"></div>
-    <button id="shareBtn">Copy result</button>
+    <div class="btn-group">
+      <button id="shareBtn" class="btn primary-btn">Copy Result</button>
+      <button id="playAgainBtn" class="btn secondary-btn">Play Again</button>
+    </div>
     <div class="stats">
       <div><b id="statPlayed">0</b>played</div>
       <div><b id="statStreak">0</b>streak</div>

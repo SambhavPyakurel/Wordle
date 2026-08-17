@@ -6,30 +6,28 @@ const COLS = 5;
 let WORDS = [];
 let VALID = new Set();
 let ANSWER = "";
-let puzzleIndex = 0;
 
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
 let curRow = 0;
 let curCol = 0;
 let gameOver = false;
 
-let STORAGE_KEY = "";
-const STATS_KEY = "dailyfive_stats";
+const STATS_KEY = "dailyfive_unlimited_stats";
 
 /* ---------------------------------------------------------
-   INITIALIZATION & ASYNC DATA LOADING
+   INITIALIZATION & DATA LOADING
 --------------------------------------------------------- */
 async function initGame() {
   buildBoard();
   buildKeyboard();
   setupPhysicalKeyboard();
+  setupActionButtons();
 
   try {
     const response = await fetch("words.txt");
     if (!response.ok) throw new Error("Network response was not ok");
     const rawText = await response.text();
 
-    // Parse words, clean whitespace and filter out non 5-letter entries
     WORDS = rawText
       .split(/\r?\n/)
       .map(w => w.trim().toLowerCase())
@@ -37,26 +35,46 @@ async function initGame() {
 
     VALID = new Set(WORDS);
 
-    // Calculate deterministic daily index
-    puzzleIndex = getDailyIndex(WORDS.length);
-    ANSWER = WORDS[puzzleIndex];
-    STORAGE_KEY = `dailyfive_${puzzleIndex}`;
-
-    document.getElementById("puzzleNum").textContent = puzzleIndex + 1;
-
-    restoreSavedGame();
+    startNewRound();
   } catch (error) {
     console.error("Error loading words.txt:", error);
     showMessage("Failed to load dictionary");
   }
 }
 
-function getDailyIndex(totalWords) {
-  const now = new Date();
-  const utcNow = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const utcEpoch = Date.UTC(2024, 0, 1);
-  const dayIndex = Math.floor((utcNow - utcEpoch) / 86400000);
-  return ((dayIndex % totalWords) + totalWords) % totalWords;
+/* ---------------------------------------------------------
+   ROUND MANAGEMENT (UNLIMITED REPLAY)
+--------------------------------------------------------- */
+function startNewRound() {
+  // Pick random word from the dictionary
+  const randomIndex = Math.floor(Math.random() * WORDS.length);
+  ANSWER = WORDS[randomIndex];
+
+  // Reset state
+  grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
+  curRow = 0;
+  curCol = 0;
+  gameOver = false;
+
+  // Clear UI elements
+  document.getElementById("result").classList.remove("show");
+  document.getElementById("message").textContent = "";
+
+  // Reset tiles
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const tile = document.getElementById(`tile-${r}-${c}`);
+      tile.textContent = "";
+      tile.className = "tile";
+    }
+  }
+
+  // Reset keys
+  const keys = document.querySelectorAll(".key");
+  keys.forEach(key => {
+    key.classList.remove("correct", "present", "absent");
+    delete key.dataset.state;
+  });
 }
 
 /* ---------------------------------------------------------
@@ -157,15 +175,14 @@ function submitGuess() {
 
   if (guess === ANSWER) {
     gameOver = true;
-    setTimeout(() => endGame(true), 1400);
+    setTimeout(() => endGame(true), 1500);
   } else if (curRow === ROWS - 1) {
     gameOver = true;
-    setTimeout(() => endGame(false), 1400);
+    setTimeout(() => endGame(false), 1500);
   } else {
     curRow++;
     curCol = 0;
   }
-  persistProgress(guess === ANSWER || curRow > ROWS - 1);
 }
 
 function scoreGuess(guess, answer) {
@@ -222,36 +239,21 @@ function shakeRow(r) {
 }
 
 /* ---------------------------------------------------------
-   PERSISTENCE & STATS
+   STATS & ENDGAME
 --------------------------------------------------------- */
 function loadStats() {
-  return JSON.parse(localStorage.getItem(STATS_KEY) || '{"played":0,"streak":0,"best":0,"lastWin":-1}');
+  return JSON.parse(localStorage.getItem(STATS_KEY) || '{"played":0,"streak":0,"best":0}');
 }
 
 function saveStats(s) {
   localStorage.setItem(STATS_KEY, JSON.stringify(s));
 }
 
-function persistProgress(finished) {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      grid,
-      curRow,
-      curCol,
-      gameOver: finished,
-      won: grid.some(row => row.join("") === ANSWER)
-    })
-  );
-}
-
 function endGame(won) {
   const stats = loadStats();
   stats.played++;
   if (won) {
-    if (stats.lastWin === puzzleIndex - 1) stats.streak++;
-    else stats.streak = 1;
-    stats.lastWin = puzzleIndex;
+    stats.streak++;
     stats.best = Math.max(stats.best, stats.streak);
   } else {
     stats.streak = 0;
@@ -262,8 +264,7 @@ function endGame(won) {
 
 function showResult(won, stats) {
   const el = document.getElementById("result");
-  el.classList.add("show");
-  document.getElementById("resultTitle").textContent = won ? "Solved it." : `The word was ${ANSWER.toUpperCase()}`;
+  document.getElementById("resultTitle").textContent = won ? "Solved it!" : `The word was ${ANSWER.toUpperCase()}`;
   document.getElementById("statPlayed").textContent = stats.played;
   document.getElementById("statStreak").textContent = stats.streak;
   document.getElementById("statBest").textContent = stats.best;
@@ -274,45 +275,25 @@ function showResult(won, stats) {
     const result = scoreGuess(grid[r].join(""), ANSWER);
     emojiRows.push(result.map(s => s === "correct" ? "🟩" : s === "present" ? "🟨" : "⬛").join(""));
   }
-  const shareText = `Daily Five #${puzzleIndex + 1} ${won ? curRow + 1 : "X"}/6\n\n${emojiRows.join("\n")}`;
+  const shareText = `Daily Five ${won ? curRow + 1 : "X"}/6\n\n${emojiRows.join("\n")}`;
   document.getElementById("shareGrid").textContent = emojiRows.join("\n");
 
   document.getElementById("shareBtn").onclick = () => {
     navigator.clipboard.writeText(shareText).then(() => showMessage("Copied to clipboard"));
   };
-}
 
-function restoreSavedGame() {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-  if (!saved) return;
-
-  grid = saved.grid;
-  curRow = saved.curRow;
-  curCol = saved.curCol;
-
-  for (let r = 0; r < ROWS; r++) {
-    if (grid[r].every(l => l === "")) continue;
-    const guess = grid[r].join("");
-    const result = scoreGuess(guess, ANSWER);
-    for (let c = 0; c < COLS; c++) {
-      const tile = document.getElementById(`tile-${r}-${c}`);
-      tile.textContent = guess[c].toUpperCase();
-      tile.classList.add("filled", "reveal", result[c]);
-      updateKey(guess[c], result[c]);
-    }
-  }
-
-  if (saved.gameOver) {
-    gameOver = true;
-    const won = grid.some(row => row.join("") === ANSWER);
-    const stats = loadStats();
-    showResult(won, stats);
-  }
+  el.classList.add("show");
 }
 
 /* ---------------------------------------------------------
-   PHYSICAL KEYBOARD
+   EVENT LISTENERS
 --------------------------------------------------------- */
+function setupActionButtons() {
+  document.getElementById("playAgainBtn").addEventListener("click", () => {
+    startNewRound();
+  });
+}
+
 function setupPhysicalKeyboard() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleInput("ENTER");
@@ -321,5 +302,5 @@ function setupPhysicalKeyboard() {
   });
 }
 
-// Start game on load
+// Initialize
 initGame();

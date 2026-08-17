@@ -12,55 +12,148 @@ let curRow = 0;
 let curCol = 0;
 let gameOver = false;
 
+// Hard mode tracking
+let confirmedGreen = Array(COLS).fill(null); // stores { index: letter }
+let confirmedPresent = new Set();            // stores letters that must be included
+
+// User Settings
+const settings = {
+  hardMode: false,
+  darkMode: false,
+  fontSize: 'normal'
+};
+
 const STATS_KEY = "dailyfive_unlimited_stats";
+const SETTINGS_KEY = "dailyfive_settings";
 
 /* ---------------------------------------------------------
    INITIALIZATION & DATA LOADING
 --------------------------------------------------------- */
 async function initGame() {
+  loadSettings();
   buildBoard();
   buildKeyboard();
   setupPhysicalKeyboard();
   setupActionButtons();
+  setupSettingsModal();
 
   try {
-    const response = await fetch("words.txt");
-    if (!response.ok) throw new Error("Network response was not ok");
-    const rawText = await response.text();
+    // 1. Fetch full allowed guess list (~14.8k words)
+    const validRes = await fetch("https://raw.githubusercontent.com/tabatkins/wordle-list/main/words");
+    if (!validRes.ok) throw new Error("Could not fetch valid words list");
+    const validText = await validRes.text();
+    VALID = new Set(
+      validText.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length === 5)
+    );
 
-    WORDS = rawText
+    // 2. Fetch curated mystery words list (from words.txt)
+    const answersRes = await fetch("words.txt");
+    if (!answersRes.ok) throw new Error("Could not fetch words.txt");
+    const answersText = await answersRes.text();
+    WORDS = answersText
       .split(/\r?\n/)
       .map(w => w.trim().toLowerCase())
       .filter(w => w.length === 5);
 
-    VALID = new Set(WORDS);
+    WORDS.forEach(w => VALID.add(w));
 
     startNewRound();
   } catch (error) {
-    console.error("Error loading words.txt:", error);
+    console.error("Error loading dictionaries:", error);
     showMessage("Failed to load dictionary");
   }
+}
+
+/* ---------------------------------------------------------
+   SETTINGS MANAGEMENT
+--------------------------------------------------------- */
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+  if (saved) {
+    settings.hardMode = !!saved.hardMode;
+    settings.darkMode = !!saved.darkMode;
+    settings.fontSize = saved.fontSize || 'normal';
+  }
+  applyTheme();
+  applyFontSize();
+}
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function applyTheme() {
+  document.body.classList.toggle("dark-mode", settings.darkMode);
+  const toggle = document.getElementById("themeToggle");
+  if (toggle) toggle.checked = settings.darkMode;
+}
+
+function applyFontSize() {
+  document.body.classList.remove("font-large", "font-xlarge");
+  if (settings.fontSize === "large") document.body.classList.add("font-large");
+  if (settings.fontSize === "xlarge") document.body.classList.add("font-xlarge");
+  const select = document.getElementById("fontSizeSelect");
+  if (select) select.value = settings.fontSize;
+}
+
+function setupSettingsModal() {
+  const modal = document.getElementById("settingsModal");
+  const openBtn = document.getElementById("settingsBtn");
+  const closeBtn = document.getElementById("closeSettingsBtn");
+  const hardToggle = document.getElementById("hardModeToggle");
+  const themeToggle = document.getElementById("themeToggle");
+  const fontSelect = document.getElementById("fontSizeSelect");
+
+  openBtn.addEventListener("click", () => modal.showModal());
+  closeBtn.addEventListener("click", () => modal.close());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.close();
+  });
+
+  hardToggle.checked = settings.hardMode;
+  hardToggle.addEventListener("change", (e) => {
+    // If mid-round and player has already started, warn about changing hard mode
+    if (curRow > 0 && !gameOver) {
+      showMessage("Hard mode can only be toggled at start of round");
+      e.target.checked = settings.hardMode;
+      return;
+    }
+    settings.hardMode = e.target.checked;
+    saveSettings();
+  });
+
+  themeToggle.checked = settings.darkMode;
+  themeToggle.addEventListener("change", (e) => {
+    settings.darkMode = e.target.checked;
+    applyTheme();
+    saveSettings();
+  });
+
+  fontSelect.value = settings.fontSize;
+  fontSelect.addEventListener("change", (e) => {
+    settings.fontSize = e.target.value;
+    applyFontSize();
+    saveSettings();
+  });
 }
 
 /* ---------------------------------------------------------
    ROUND MANAGEMENT (UNLIMITED REPLAY)
 --------------------------------------------------------- */
 function startNewRound() {
-  // Pick random word from the dictionary
   const randomIndex = Math.floor(Math.random() * WORDS.length);
   ANSWER = WORDS[randomIndex];
 
-  // Reset state
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
   curRow = 0;
   curCol = 0;
   gameOver = false;
+  confirmedGreen = Array(COLS).fill(null);
+  confirmedPresent.clear();
 
-  // Clear UI elements
   document.getElementById("result").classList.remove("show");
   document.getElementById("message").textContent = "";
 
-  // Reset tiles
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const tile = document.getElementById(`tile-${r}-${c}`);
@@ -69,7 +162,6 @@ function startNewRound() {
     }
   }
 
-  // Reset keys
   const keys = document.querySelectorAll(".key");
   keys.forEach(key => {
     key.classList.remove("correct", "present", "absent");
@@ -126,7 +218,7 @@ function makeKey(label, extraClass, action) {
 }
 
 /* ---------------------------------------------------------
-   INPUT HANDLING
+   INPUT HANDLING & HARD MODE VALIDATION
 --------------------------------------------------------- */
 function handleInput(key) {
   if (gameOver || !ANSWER) return;
@@ -154,7 +246,27 @@ function deleteLetter() {
 function showMessage(msg) {
   const m = document.getElementById("message");
   m.textContent = msg;
-  if (msg) setTimeout(() => { if (m.textContent === msg) m.textContent = ""; }, 1800);
+  if (msg) setTimeout(() => { if (m.textContent === msg) m.textContent = ""; }, 2200);
+}
+
+function validateHardMode(guess) {
+  // 1. Check fixed green letters
+  for (let i = 0; i < COLS; i++) {
+    if (confirmedGreen[i] && guess[i] !== confirmedGreen[i]) {
+      const pos = ["1st", "2nd", "3rd", "4th", "5th"][i];
+      showMessage(`${pos} letter must be ${confirmedGreen[i].toUpperCase()}`);
+      return false;
+    }
+  }
+
+  // 2. Check yellow letters
+  for (const letter of confirmedPresent) {
+    if (!guess.includes(letter)) {
+      showMessage(`Guess must contain ${letter.toUpperCase()}`);
+      return false;
+    }
+  }
+  return true;
 }
 
 function submitGuess() {
@@ -170,8 +282,19 @@ function submitGuess() {
     return;
   }
 
+  if (settings.hardMode && !validateHardMode(guess)) {
+    shakeRow(curRow);
+    return;
+  }
+
   const result = scoreGuess(guess, ANSWER);
   revealRow(curRow, result, guess);
+
+  // Update hard mode constraints
+  result.forEach((res, i) => {
+    if (res === "correct") confirmedGreen[i] = guess[i];
+    if (res === "present") confirmedPresent.add(guess[i]);
+  });
 
   if (guess === ANSWER) {
     gameOver = true;

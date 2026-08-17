@@ -8,8 +8,18 @@
 </head>
 <body>
 
-  <header>
+  <div class="top-bar">
+    <div class="top-spacer"></div>
     <div class="eyebrow">Word Puzzle Game</div>
+    <button id="settingsBtn" class="icon-btn" aria-label="Settings" title="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <header>
     <h1>DAILY FIVE</h1>
     <div class="sub">Guess the five-letter word in six tries.<br>Green means right spot, gold means wrong spot.</div>
   </header>
@@ -31,6 +41,54 @@
       <div><b id="statBest">0</b>best</div>
     </div>
   </div>
+
+  <dialog id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button id="closeSettingsBtn" class="icon-btn" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-text">
+          <div class="setting-label">Hard Mode</div>
+          <div class="setting-desc">Any revealed hints must be used in subsequent guesses</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="hardModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-text">
+          <div class="setting-label">Dark Theme</div>
+          <div class="setting-desc">Switch between light and dark interface</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-text">
+          <div class="setting-label">Font Size</div>
+          <div class="setting-desc">Scale letter sizing for tiles and board</div>
+        </div>
+        <select id="fontSizeSelect" class="setting-select">
+          <option value="normal">Standard</option>
+          <option value="large">Large</option>
+          <option value="xlarge">Extra Large</option>
+        </select>
+      </div>
+    </div>
+  </dialog>
 
   <script src="script.js"></script>
 </body>

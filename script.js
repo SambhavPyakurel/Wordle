@@ -10,16 +10,15 @@ let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
 let curRow = 0;
 let curCol = 0;
 let gameOver = false;
-let isDailyGame = true; // First game of session is daily
+let isDailyGame = true;
 
 // Hard mode tracking
 let confirmedGreen = Array(COLS).fill(null);
 let confirmedPresent = new Set();
 
-// User Settings
+// User Settings (Dark mode removed)
 const settings = {
   hardMode: false,
-  darkMode: false,
   fontSize: 'normal'
 };
 
@@ -38,7 +37,6 @@ async function initGame() {
   setupSettingsModal();
 
   try {
-    // 1. Fetch full allowed guess list (~14.8k words)
     const validRes = await fetch("https://raw.githubusercontent.com/tabatkins/wordle-list/main/words");
     if (!validRes.ok) throw new Error("Could not fetch valid words list");
     const validText = await validRes.text();
@@ -46,7 +44,6 @@ async function initGame() {
       validText.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length === 5)
     );
 
-    // 2. Fetch curated mystery words list (from words.txt)
     const answersRes = await fetch("words.txt");
     if (!answersRes.ok) throw new Error("Could not fetch words.txt");
     const answersText = await answersRes.text();
@@ -71,21 +68,13 @@ function loadSettings() {
   const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
   if (saved) {
     settings.hardMode = !!saved.hardMode;
-    settings.darkMode = !!saved.darkMode;
     settings.fontSize = saved.fontSize || 'normal';
   }
-  applyTheme();
   applyFontSize();
 }
 
 function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-}
-
-function applyTheme() {
-  document.body.classList.toggle("dark-mode", settings.darkMode);
-  const toggle = document.getElementById("themeToggle");
-  if (toggle) toggle.checked = settings.darkMode;
 }
 
 function applyFontSize() {
@@ -101,7 +90,6 @@ function setupSettingsModal() {
   const openBtn = document.getElementById("settingsBtn");
   const closeBtn = document.getElementById("closeSettingsBtn");
   const hardToggle = document.getElementById("hardModeToggle");
-  const themeToggle = document.getElementById("themeToggle");
   const fontSelect = document.getElementById("fontSizeSelect");
 
   openBtn.addEventListener("click", () => modal.showModal());
@@ -118,13 +106,6 @@ function setupSettingsModal() {
       return;
     }
     settings.hardMode = e.target.checked;
-    saveSettings();
-  });
-
-  themeToggle.checked = settings.darkMode;
-  themeToggle.addEventListener("change", (e) => {
-    settings.darkMode = e.target.checked;
-    applyTheme();
     saveSettings();
   });
 
@@ -402,7 +383,6 @@ function endGame(won) {
   saveStats(stats);
   showResult(won, stats);
   
-  // Future rounds played in this session switch to random free play
   isDailyGame = false;
 }
 
@@ -417,7 +397,8 @@ function showResult(won, stats) {
   for (let r = 0; r <= curRow && r < ROWS; r++) {
     if (grid[r].every(l => l === "")) continue;
     const result = scoreGuess(grid[r].join(""), ANSWER);
-    emojiRows.push(result.map(s => s === "correct" ? "🟨" : s === "present" ? "🟧" : "⬛").join(""));
+    // Standard Wordle share emojis (Green / Yellow / Dark)
+    emojiRows.push(result.map(s => s === "correct" ? "🟩" : s === "present" ? "🟨" : "⬛").join(""));
   }
 
   const modeTitle = isDailyGame ? "Daily Five (Daily)" : "Daily Five (Free Play)";

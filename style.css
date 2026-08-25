@@ -1,17 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
 :root {
-  /* Black & Gold Theme Default */
+  /* Permanent Black & Gold Base */
   --paper: #0c0d10;
   --paper-dim: #1e2229;
   --modal-bg: #14171d;
   --ink: #f5f5f7;
   --ink-soft: #8e95a5;
   
-  /* State Accents */
-  --gold-primary: #d4af37;
-  --gold-present: #826a1d;
-  --tile-absent: #1e222a;
+  /* Accents & States */
+  --stamp-green: #3f7547;       /* Correct Position: Classic Wordle Green */
+  --gold-primary: #d4af37;      /* Metallic Gold UI Accent */
+  --gold-present: #c79a2b;      /* Wrong Position: Classic Gold */
+  --tile-absent: #1e222a;       /* Charcoal Grey */
   
   --line: #2d333f;
   --error: #e05244;
@@ -20,19 +21,6 @@
   /* Font & tile scaling */
   --tile-size: 52px;
   --tile-font-size: 24px;
-}
-
-/* Optional Light/Dim variant fallback */
-body.dark-mode {
-  --paper: #050607;
-  --paper-dim: #15181e;
-  --modal-bg: #0f1116;
-  --ink: #ffffff;
-  --ink-soft: #7a8291;
-  --gold-primary: #e5be3e;
-  --gold-present: #91751c;
-  --tile-absent: #191c22;
-  --line: #222731;
 }
 
 /* Font Size Scales */
@@ -69,7 +57,6 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 16px 16px 60px;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Top Bar Layout */
@@ -179,13 +166,15 @@ h1 {
 }
 
 .tile.correct { 
-  background: var(--gold-primary); 
-  color: #0c0d10; /* Dark contrast on gold */
+  background: var(--stamp-green); 
+  color: #ffffff;
 }
+
 .tile.present { 
   background: var(--gold-present); 
   color: #ffffff;
 }
+
 .tile.absent  { 
   background: var(--tile-absent); 
   color: var(--ink-soft);
@@ -268,13 +257,15 @@ h1 {
 }
 
 .key.correct { 
-  background: var(--gold-primary); 
-  color: #0c0d10; 
+  background: var(--stamp-green); 
+  color: #ffffff; 
 }
+
 .key.present { 
   background: var(--gold-present); 
   color: #ffffff; 
 }
+
 .key.absent  { 
   background: var(--tile-absent); 
   color: var(--ink-soft); 

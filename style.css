@@ -1,36 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
 :root {
-  --paper: #F2EEE3;
-  --paper-dim: #E7E1D2;
-  --modal-bg: #FAF7F0;
-  --ink: #24304A;
-  --ink-soft: #4C5A78;
-  --stamp-green: #46714B;
-  --stamp-gold: #C79A2B;
-  --stamp-charcoal: #35322C;
-  --line: #C9C1AC;
-  --error: #A6432F;
-  --bg-dot: rgba(36, 48, 74, 0.06);
+  /* Black & Gold Theme Default */
+  --paper: #0c0d10;
+  --paper-dim: #1e2229;
+  --modal-bg: #14171d;
+  --ink: #f5f5f7;
+  --ink-soft: #8e95a5;
+  
+  /* State Accents */
+  --gold-primary: #d4af37;
+  --gold-present: #826a1d;
+  --tile-absent: #1e222a;
+  
+  --line: #2d333f;
+  --error: #e05244;
+  --bg-dot: rgba(212, 175, 55, 0.05);
 
   /* Font & tile scaling */
   --tile-size: 52px;
   --tile-font-size: 24px;
 }
 
-/* Dark Theme Variables */
+/* Optional Light/Dim variant fallback */
 body.dark-mode {
-  --paper: #181B22;
-  --paper-dim: #29303D;
-  --modal-bg: #212631;
-  --ink: #F0F3F8;
-  --ink-soft: #9BA5B7;
-  --stamp-green: #3F7547;
-  --stamp-gold: #B88B22;
-  --stamp-charcoal: #3E434D;
-  --line: #3E4756;
-  --error: #E55845;
-  --bg-dot: rgba(240, 243, 248, 0.04);
+  --paper: #050607;
+  --paper-dim: #15181e;
+  --modal-bg: #0f1116;
+  --ink: #ffffff;
+  --ink-soft: #7a8291;
+  --gold-primary: #e5be3e;
+  --gold-present: #91751c;
+  --tile-absent: #191c22;
+  --line: #222731;
 }
 
 /* Font Size Scales */
@@ -38,6 +40,7 @@ body.font-large {
   --tile-size: 58px;
   --tile-font-size: 28px;
 }
+
 body.font-xlarge {
   --tile-size: 64px;
   --tile-font-size: 32px;
@@ -86,7 +89,7 @@ body {
 .icon-btn {
   background: transparent;
   border: none;
-  color: var(--ink-soft);
+  color: var(--gold-primary);
   cursor: pointer;
   padding: 8px;
   border-radius: 6px;
@@ -97,12 +100,12 @@ body {
 }
 
 .icon-btn:hover {
-  color: var(--ink);
+  color: #fff;
   background: var(--paper-dim);
 }
 
 .icon-btn:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--gold-primary);
 }
 
 header {
@@ -113,10 +116,10 @@ header {
 
 .eyebrow {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--gold-primary);
 }
 
 h1 {
@@ -124,7 +127,8 @@ h1 {
   font-weight: 700;
   font-size: 34px;
   margin: 4px 0 6px;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  color: var(--gold-primary);
 }
 
 .sub {
@@ -164,19 +168,28 @@ h1 {
 }
 
 .tile.filled {
-  border-color: var(--ink-soft);
+  border-color: var(--gold-primary);
   animation: pop 0.1s ease;
 }
 
 .tile.reveal {
   animation: flip 0.5s ease forwards;
-  color: #F2EEE3;
+  color: #ffffff;
   border-color: transparent;
 }
 
-.tile.correct { background: var(--stamp-green); }
-.tile.present { background: var(--stamp-gold); }
-.tile.absent  { background: var(--stamp-charcoal); }
+.tile.correct { 
+  background: var(--gold-primary); 
+  color: #0c0d10; /* Dark contrast on gold */
+}
+.tile.present { 
+  background: var(--gold-present); 
+  color: #ffffff;
+}
+.tile.absent  { 
+  background: var(--tile-absent); 
+  color: var(--ink-soft);
+}
 
 @keyframes pop {
   0% { transform: scale(1); }
@@ -205,10 +218,10 @@ h1 {
 #message {
   min-height: 20px;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--error);
+  color: var(--gold-primary);
   margin-bottom: 14px;
   text-align: center;
 }
@@ -254,16 +267,25 @@ h1 {
   font-size: 11px;
 }
 
-.key.correct { background: var(--stamp-green); color: #F2EEE3; }
-.key.present { background: var(--stamp-gold); color: #F2EEE3; }
-.key.absent  { background: var(--stamp-charcoal); color: #F2EEE3; }
+.key.correct { 
+  background: var(--gold-primary); 
+  color: #0c0d10; 
+}
+.key.present { 
+  background: var(--gold-present); 
+  color: #ffffff; 
+}
+.key.absent  { 
+  background: var(--tile-absent); 
+  color: var(--ink-soft); 
+}
 
 .key:focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 2px solid var(--gold-primary);
   outline-offset: 2px;
 }
 
-/* Result Fade-in */
+/* Result Screen */
 #result {
   opacity: 0;
   visibility: hidden;
@@ -274,7 +296,7 @@ h1 {
   width: 100%;
   border-top: 1px dashed var(--line);
   padding-top: 18px;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), 
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
               visibility 0.45s ease;
 }
@@ -290,6 +312,7 @@ h1 {
   font-size: 22px;
   font-weight: 700;
   margin: 0 0 8px;
+  color: var(--gold-primary);
 }
 
 #shareGrid {
@@ -323,19 +346,23 @@ h1 {
 }
 
 .primary-btn {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--gold-primary);
+  color: #0c0d10;
   border: none;
 }
 
 .secondary-btn {
-  background: var(--stamp-green);
-  color: #F2EEE3;
-  border: none;
+  background: var(--paper-dim);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.secondary-btn:hover {
+  border-color: var(--gold-primary);
 }
 
 .btn:focus-visible {
-  outline: 3px solid var(--stamp-gold);
+  outline: 2px solid var(--gold-primary);
   outline-offset: 2px;
 }
 
@@ -353,13 +380,11 @@ h1 {
   display: block;
   font-size: 20px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--gold-primary);
   font-family: 'Space Grotesk', sans-serif;
 }
 
-/* ---------------------------------------------------------
-   SETTINGS MODAL & TOGGLES
---------------------------------------------------------- */
+/* Modal */
 .modal {
   border: none;
   border-radius: 12px;
@@ -370,8 +395,8 @@ h1 {
 }
 
 .modal::backdrop {
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
@@ -380,7 +405,7 @@ h1 {
   padding: 24px;
   border-radius: 12px;
   border: 1px solid var(--line);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
 .modal-header {
@@ -396,6 +421,7 @@ h1 {
   font-family: 'Space Grotesk', sans-serif;
   margin: 0;
   font-size: 20px;
+  color: var(--gold-primary);
 }
 
 .setting-item {
@@ -403,7 +429,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(128,128,128,0.15);
+  border-bottom: 1px solid var(--line);
 }
 
 .setting-text {
@@ -465,17 +491,17 @@ h1 {
   width: 16px;
   left: 3px;
   bottom: 3px;
-  background-color: var(--ink);
+  background-color: var(--ink-soft);
   transition: .3s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: var(--stamp-green);
-  border-color: var(--stamp-green);
+  background-color: var(--gold-primary);
+  border-color: var(--gold-primary);
 }
 
 input:checked + .slider:before {
   transform: translateX(20px);
-  background-color: #ffffff;
+  background-color: #0c0d10;
 }

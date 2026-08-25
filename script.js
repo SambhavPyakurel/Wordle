@@ -6,15 +6,15 @@ const COLS = 5;
 let WORDS = [];
 let VALID = new Set();
 let ANSWER = "";
-
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
 let curRow = 0;
 let curCol = 0;
 let gameOver = false;
+let isDailyGame = true; // First game of session is daily
 
 // Hard mode tracking
-let confirmedGreen = Array(COLS).fill(null); // stores { index: letter }
-let confirmedPresent = new Set();            // stores letters that must be included
+let confirmedGreen = Array(COLS).fill(null);
+let confirmedPresent = new Set();
 
 // User Settings
 const settings = {
@@ -112,7 +112,6 @@ function setupSettingsModal() {
 
   hardToggle.checked = settings.hardMode;
   hardToggle.addEventListener("change", (e) => {
-    // If mid-round and player has already started, warn about changing hard mode
     if (curRow > 0 && !gameOver) {
       showMessage("Hard mode can only be toggled at start of round");
       e.target.checked = settings.hardMode;
@@ -138,11 +137,26 @@ function setupSettingsModal() {
 }
 
 /* ---------------------------------------------------------
-   ROUND MANAGEMENT (UNLIMITED REPLAY)
+   ROUND MANAGEMENT (DAILY FIRST, THEN FREE PLAY)
 --------------------------------------------------------- */
+function getDailyWord() {
+  const epochStart = new Date("2024-01-01T00:00:00Z").getTime();
+  const now = new Date().getTime();
+  const dayIndex = Math.floor((now - epochStart) / (1000 * 60 * 60 * 24));
+  return WORDS[dayIndex % WORDS.length];
+}
+
 function startNewRound() {
-  const randomIndex = Math.floor(Math.random() * WORDS.length);
-  ANSWER = WORDS[randomIndex];
+  if (isDailyGame) {
+    ANSWER = getDailyWord();
+    const eyebrow = document.querySelector(".eyebrow");
+    if (eyebrow) eyebrow.textContent = "Daily Challenge";
+  } else {
+    const randomIndex = Math.floor(Math.random() * WORDS.length);
+    ANSWER = WORDS[randomIndex];
+    const eyebrow = document.querySelector(".eyebrow");
+    if (eyebrow) eyebrow.textContent = "Free Play";
+  }
 
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(""));
   curRow = 0;
@@ -224,6 +238,7 @@ function handleInput(key) {
   if (gameOver || !ANSWER) return;
   if (key === "ENTER") return submitGuess();
   if (key === "DEL") return deleteLetter();
+
   if (/^[a-zA-Z]$/.test(key) && curCol < COLS) {
     grid[curRow][curCol] = key.toLowerCase();
     const tile = document.getElementById(`tile-${curRow}-${curCol}`);
@@ -250,7 +265,6 @@ function showMessage(msg) {
 }
 
 function validateHardMode(guess) {
-  // 1. Check fixed green letters
   for (let i = 0; i < COLS; i++) {
     if (confirmedGreen[i] && guess[i] !== confirmedGreen[i]) {
       const pos = ["1st", "2nd", "3rd", "4th", "5th"][i];
@@ -259,7 +273,6 @@ function validateHardMode(guess) {
     }
   }
 
-  // 2. Check yellow letters
   for (const letter of confirmedPresent) {
     if (!guess.includes(letter)) {
       showMessage(`Guess must contain ${letter.toUpperCase()}`);
@@ -275,7 +288,9 @@ function submitGuess() {
     shakeRow(curRow);
     return;
   }
+
   const guess = grid[curRow].join("");
+
   if (!VALID.has(guess)) {
     showMessage("Not in word list");
     shakeRow(curRow);
@@ -290,7 +305,6 @@ function submitGuess() {
   const result = scoreGuess(guess, ANSWER);
   revealRow(curRow, result, guess);
 
-  // Update hard mode constraints
   result.forEach((res, i) => {
     if (res === "correct") confirmedGreen[i] = guess[i];
     if (res === "present") confirmedPresent.add(guess[i]);
@@ -319,6 +333,7 @@ function scoreGuess(guess, answer) {
       used[i] = true;
     }
   }
+
   for (let i = 0; i < COLS; i++) {
     if (result[i] === "correct") continue;
     const gLetter = guess[i];
@@ -330,6 +345,7 @@ function scoreGuess(guess, answer) {
       }
     }
   }
+
   return result;
 }
 
@@ -346,8 +362,10 @@ function revealRow(r, result, guess) {
 function updateKey(letter, state) {
   const key = document.getElementById("key-" + letter);
   if (!key) return;
+
   const rank = { absent: 0, present: 1, correct: 2 };
   const current = key.dataset.state || "absent";
+
   if (!key.dataset.state || rank[state] > rank[current]) {
     key.classList.remove("correct", "present", "absent");
     key.classList.add(state);
@@ -383,6 +401,9 @@ function endGame(won) {
   }
   saveStats(stats);
   showResult(won, stats);
+  
+  // Future rounds played in this session switch to random free play
+  isDailyGame = false;
 }
 
 function showResult(won, stats) {
@@ -396,11 +417,12 @@ function showResult(won, stats) {
   for (let r = 0; r <= curRow && r < ROWS; r++) {
     if (grid[r].every(l => l === "")) continue;
     const result = scoreGuess(grid[r].join(""), ANSWER);
-    emojiRows.push(result.map(s => s === "correct" ? "🟩" : s === "present" ? "🟨" : "⬛").join(""));
+    emojiRows.push(result.map(s => s === "correct" ? "🟨" : s === "present" ? "🟧" : "⬛").join(""));
   }
-  const shareText = `Daily Five ${won ? curRow + 1 : "X"}/6\n\n${emojiRows.join("\n")}`;
-  document.getElementById("shareGrid").textContent = emojiRows.join("\n");
 
+  const modeTitle = isDailyGame ? "Daily Five (Daily)" : "Daily Five (Free Play)";
+  const shareText = `${modeTitle} ${won ? curRow + 1 : "X"}/6\n\n${emojiRows.join("\n")}`;
+  document.getElementById("shareGrid").textContent = emojiRows.join("\n");
   document.getElementById("shareBtn").onclick = () => {
     navigator.clipboard.writeText(shareText).then(() => showMessage("Copied to clipboard"));
   };
@@ -425,5 +447,4 @@ function setupPhysicalKeyboard() {
   });
 }
 
-// Initialize
 initGame();

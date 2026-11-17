@@ -17,12 +17,12 @@ A browser-based five-letter word game built with HTML, CSS, and vanilla JavaScri
 
 Actual screenshots of the current project running locally.
 
-![Daily Five after submitting a guess](docs/images/game.png)
+![Daily Five after submitting a guess](game.png)
 
 <details>
 <summary>Settings: Hard Mode and font size</summary>
 
-![Daily Five settings](docs/images/settings.png)
+![Daily Five settings](settings.png)
 
 </details>
 

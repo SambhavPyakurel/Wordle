@@ -1,85 +1,80 @@
-# Daily Five — Wordle-Style Game
+# Daily Five
 
-A browser-based five-letter word game built with HTML, CSS, and vanilla JavaScript. Solve a daily challenge in six guesses, then continue with randomly selected words in Free Play.
+A Wordle-style browser game: guess the five-letter word in six tries, tackle a new daily challenge, or keep playing with random words.
 
-## What it does
+Built with **HTML, CSS, and vanilla JavaScript**. No account or installation required to play.
 
-- Renders a six-row, five-column board with animated feedback: green for the correct position, gold for a letter elsewhere, and gray for absent letters.
-- Uses a two-pass scoring algorithm that accounts for repeated letters.
-- Supports physical and on-screen keyboards.
-- Selects the daily answer using a UTC day index starting January 1, 2024.
-- Starts random Free Play rounds through **Play Again** after a completed game.
-- Offers Hard Mode: keep confirmed green positions and include previously revealed yellow letters.
-- Saves games played, consecutive-win streak, best streak, Hard Mode, and font size in browser local storage.
-- Generates an emoji result grid that can be copied to the clipboard.
+![Daily Five gameplay](game.png)
 
-## Screenshots
+## Features
 
-Actual screenshots of the current project running locally.
-
-![Daily Five after submitting a guess](game.png)
+- **Daily challenge** — a shared word selected by the current UTC date.
+- **Free Play** — finish a round and choose Play Again for a random word.
+- **Letter feedback** — green for the right position, gold for the wrong position, and gray for absent letters, with repeated-letter scoring.
+- **Hard Mode** — reuse revealed letters and keep confirmed green letters in place.
+- **Keyboard support** — play with your physical keyboard or the on-screen keys.
+- **Local statistics** — track games played, consecutive wins, and your best streak.
+- **Personalization** — choose Standard, Large, or Extra Large letters.
+- **Shareable results** — copy an emoji grid without revealing your guesses.
 
 <details>
-<summary>Settings: Hard Mode and font size</summary>
+<summary>View settings</summary>
 
-![Daily Five settings](settings.png)
+![Hard Mode and font-size settings](settings.png)
 
 </details>
 
-## How to run
+## Run locally
 
-You need Git, a modern browser, and Python 3 for a local web server. There are no npm dependencies, build steps, accounts, or API keys.
+You need a modern browser, Git, and Python 3 to serve the files.
 
 ```bash
 git clone https://github.com/SambhavPyakurel/Wordle.git
 cd Wordle
 ```
 
-**Windows PowerShell:**
+Start a local server:
 
 ```powershell
+# Windows
 py -3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-**macOS / Linux:**
-
 ```bash
+# macOS / Linux
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-Open [http://localhost:8000](http://localhost:8000). Keep the terminal running; press **Ctrl+C** to stop. If port 8000 is busy, use 8001 in both the command and URL.
+Open **[localhost:8000](http://localhost:8000)**. Press `Ctrl+C` in the terminal to stop the server. No npm install or build step is needed.
 
-Use HTTP rather than double-clicking `index.html`: the game uses `fetch()` to load word lists. Internet access is required at startup for its external dictionary.
+Use the local server instead of opening `index.html` directly: the game loads its dictionaries with `fetch()`. An internet connection is needed to retrieve the external valid-word list.
 
 ## How to play
 
-1. Type a five-letter word and press **Enter**. Use **Backspace** to delete a letter.
-2. Use the tile and keyboard colors to refine your next guess.
-3. Enable Hard Mode before submitting the first guess of a round, if desired.
-4. After finishing, view statistics, copy the result, or choose **Play Again**.
+1. Enter a five-letter word and press **Enter**. Use **Backspace** to remove a letter.
+2. Follow the tile colors to narrow down the answer.
+3. Solve the word within six guesses.
+4. Copy your result or select **Play Again** to enter Free Play.
 
-Font sizes are Standard, Large, and Extra Large. Statistics belong to the browser and origin; changing ports or clearing site data gives you a separate or empty history.
+Enable Hard Mode before your first submitted guess. The settings button also controls letter size.
 
 ## Project structure
 
-| File | Purpose |
-| --- | --- |
-| `index.html` | Board containers, results, and settings dialog |
-| `script.js` | Dictionary loading, daily selection, input, scoring, and persistence |
-| `style.css` | Layout, colors, animations, and font scaling |
-| `words.txt` | Local answer list; 508 five-letter entries at review time |
-| `DAILYFIVE.png` | Existing repository image asset |
-| `docs/images/` | README screenshots |
+```text
+Wordle/
+├── index.html       # Game page and settings dialog
+├── script.js        # Game state, scoring, dictionary loading, and storage
+├── style.css        # Layout, colors, and animations
+├── words.txt        # Answer list
+└── docs/images/     # Screenshots
+```
 
-Valid guesses also come from [tabatkins/wordle-list](https://github.com/tabatkins/wordle-list), fetched from raw GitHub at startup. Local answers are added to the accepted-guess set. This is an independent Wordle-style project, not an official Wordle product.
+## Game data
 
-## Verification and limitations
+Settings and statistics are stored in your browser's `localStorage`. They are not shared between browsers or devices. Streaks count consecutive wins across both modes, rather than consecutive calendar days.
 
-Verified locally in headless Microsoft Edge: dictionary loading, a submitted guess, settings rendering, and duplicate-letter scoring. The loaded dictionary contained 14,855 unique entries during the check; the external list can change. This was a smoke check, not a comprehensive browser or accessibility test.
+Current guesses and daily completion are not saved: refreshing starts the daily round again. Hard Mode requires revealed letters but does not enforce repeated-letter counts. Clipboard sharing requires browser permission and HTTPS or localhost.
 
-- Reloading starts a new daily round. Current guesses and daily completion are not persisted, so the same daily word can be replayed and counted again.
-- Streaks count consecutive wins across daily and Free Play rounds, not consecutive calendar days.
-- Hard Mode stores yellow letters as a set, so it does not enforce repeated-letter counts or every positional restriction.
-- No offline dictionary fallback, backend, account sync, or automated test suite is included.
-- Clipboard copying depends on browser permissions and a secure context such as HTTPS or localhost; failures are not handled in the UI.
-- Malformed local-storage values can interrupt startup. Clear this site's storage if loading repeatedly fails.
+## Credits
+
+Valid guesses are loaded from [tabatkins/wordle-list](https://github.com/tabatkins/wordle-list), with the local answer list added to the dictionary. Daily Five is an independent Wordle-style project and is not affiliated with the official Wordle game.
